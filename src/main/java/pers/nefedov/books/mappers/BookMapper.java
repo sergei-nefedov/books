@@ -2,7 +2,7 @@ package pers.nefedov.books.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import pers.nefedov.books.BookDto;
+import pers.nefedov.books.dto.BookDto;
 import pers.nefedov.books.models.Book;
 
 @Mapper(componentModel = "spring")

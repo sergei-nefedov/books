@@ -8,7 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pers.nefedov.books.BookDto;
+import pers.nefedov.books.dto.BookDto;
 import pers.nefedov.books.models.Book;
 import pers.nefedov.books.services.BookService;
 

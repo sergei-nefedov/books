@@ -2,7 +2,7 @@ package pers.nefedov.books.services;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import pers.nefedov.books.BookDto;
+import pers.nefedov.books.dto.BookDto;
 import pers.nefedov.books.models.Book;
 
 public interface BookService {

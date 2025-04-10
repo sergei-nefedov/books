@@ -3,7 +3,7 @@ package pers.nefedov.books.services;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import pers.nefedov.books.BookDto;
+import pers.nefedov.books.dto.BookDto;
 import pers.nefedov.books.mappers.BookMapper;
 import pers.nefedov.books.models.Book;
 import pers.nefedov.books.repositories.BookRepository;

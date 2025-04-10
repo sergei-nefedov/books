@@ -1,4 +1,4 @@
-package pers.nefedov.books;
+package pers.nefedov.books.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
