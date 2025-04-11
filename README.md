@@ -1,12 +1,12 @@
 <h3>Демонстрационное приложение для учета книг.</h3>
 
-Язык реализации: Java 21<br>
+Язык реализации: Java 21, HTML<br>
 Фреймворк: Spring Boot 3.4<br>
 База данных:  PostgreSQL<br>
 Версия JDK : 21<br>
 Система сборки: Maven<br>
 Тестирование: -<br>
-Прочее: Mapstruct, Lombok, Thymeleaf<br>
+Прочее: Mapstruct, Lombok, Thymeleaf, Bootstrap<br>
  <br> Запуск осуществляется через pers/nefedov/books/BooksApplication.java. <br>
 Для работы приложения необходимо запустить PostgreSQL в контейнере Docker с помощью compose.yaml (находится в корне проекта).<br>
 
