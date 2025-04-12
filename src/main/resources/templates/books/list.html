@@ -26,6 +26,22 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+            margin-bottom: 16px;
+        }
+        .filter-item {
+            flex: 1;
+            min-width: 150px;
+        }
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
     </style>
 </head>
 <body>
@@ -69,258 +85,253 @@
     <div sec:authorize="isAuthenticated()">
         <h1>Список книг</h1>
 
-    <!-- Форма фильтрации -->
-    <form th:action="@{/api/books}" method="get" class="mb-4">
-        <input type="hidden" name="page" th:value="${currentPage}">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label for="title" class="form-label">Title</label>
-                <input type="text" class="form-control" id="title" name="title"
-                       th:value="${titleFilter}">
+        <!-- Форма фильтрации -->
+        <form th:action="@{/api/books}" method="get" class="mb-4">
+            <input type="hidden" name="page" th:value="${currentPage}">
+            <div class="filter-container">
+                <div class="filter-item">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title"
+                           th:value="${titleFilter}">
+                </div>
+                <div class="filter-item">
+                    <label for="brand" class="form-label">Brand</label>
+                    <input type="text" class="form-control" id="brand" name="brand"
+                           th:value="${brandFilter}">
+                </div>
+                <div class="filter-item">
+                    <label for="year" class="form-label">Year</label>
+                    <input type="number" class="form-control" id="year" name="year"
+                           th:value="${yearFilter}">
+                </div>
+                <div class="filter-item">
+                    <label for="size" class="form-label">Items per page</label>
+                    <select class="form-select" id="size" name="size">
+                        <option th:selected="${pageSize == 5}" value=5>5</option>
+                        <option th:selected="${pageSize == 10}" value=10>10</option>
+                        <option th:selected="${pageSize == 20}" value=20>20</option>
+                        <option th:selected="${pageSize == 50}" value=50>50</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a th:href="@{/api/books}" class="btn btn-secondary">Reset</a>
+                </div>
             </div>
-            <div class="col-md-3">
-                <label for="brand" class="form-label">Brand</label>
-                <input type="text" class="form-control" id="brand" name="brand"
-                       th:value="${brandFilter}">
-            </div>
-            <div class="col-md-3">
-                <label for="year" class="form-label">Year</label>
-                <input type="number" class="form-control" id="year" name="year"
-                       th:value="${yearFilter}">
-            </div>
-            <div class="col-md-2 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary">Apply</button>
-                <a th:href="@{/api/books}" class="btn btn-secondary">Reset</a>
-            </div>
+        </form>
+
+        <!-- Сообщение о пустом результате -->
+        <div th:if="${books != null and books.isEmpty()}" class="no-results mb-4">
+            <h5 th:if="${titleFilter != null or brandFilter != null or yearFilter != null}">
+                No books match your search criteria
+            </h5>
+            <h5 th:unless="${titleFilter != null or brandFilter != null or yearFilter != null}">
+                No books available in catalog
+            </h5>
+            <a th:href="@{/api/books}" class="btn btn-outline-primary mt-2">Show all books</a>
         </div>
 
-        <!-- Выбор размера страницы -->
-        <div class="row mt-3">
-            <div class="col-md-3">
-                <label for="size" class="form-label">Items per page:</label>
-                <select class="form-select" id="size" name="size">
-                    <option th:selected="${pageSize == 5}" value=5>5</option>
-                    <option th:selected="${pageSize == 10}" value=10>10</option>
-                    <option th:selected="${pageSize == 20}" value=20>20</option>
-                    <option th:selected="${pageSize == 50}" value=50>50</option>
-                </select>
-            </div>
-        </div>
-    </form>
+        <!-- Таблица книг -->
+        <div th:each="book : ${books}" th:if="${not #lists.isEmpty(books)}">
+            <!-- Модальное окно для редактирования (одно для каждой книги, но будет показано только одно) -->
+            <div class="modal fade" th:id="'editBookModal'+${book.id}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form th:action="@{/api/books/{id}(id=${book.id})}" method="post">
+                            <input type="hidden" name="_method" value="put"/>
+                            <!-- <input type="hidden" name="_csrf" th:value="${_csrf.token}"/> -->
 
-    <!-- Сообщение о пустом результате -->
-    <div th:if="${books != null and books.isEmpty()}" class="no-results mb-4">
-        <h5 th:if="${titleFilter != null or brandFilter != null or yearFilter != null}">
-            No books match your search criteria
-        </h5>
-        <h5 th:unless="${titleFilter != null or brandFilter != null or yearFilter != null}">
-            No books available in catalog
-        </h5>
-        <a th:href="@{/api/books}" class="btn btn-outline-primary mt-2">Show all books</a>
-    </div>
-
-    <!-- Таблица книг -->
-    <!-- Добавьте это перед таблицей -->
-    <div th:each="book : ${books}" th:if="${not #lists.isEmpty(books)}">
-        <!-- Модальное окно для редактирования (одно для каждой книги, но будет показано только одно) -->
-        <div class="modal fade" th:id="'editBookModal'+${book.id}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form th:action="@{/api/books/{id}(id=${book.id})}" method="post">
-                        <input type="hidden" name="_method" value="put"/>
-                        <!-- <input type="hidden" name="_csrf" th:value="${_csrf.token}"/> -->
-
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Book</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="vendorCode" class="form-label">Vendor Code</label>
-                                <input type="text" class="form-control" id="editVendorCode" name="vendorCode"
-                                       th:value="${book.vendorCode}" required>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Book</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="mb-3">
-                                <label for="title" class="form-label">Title</label>
-                                <input type="text" class="form-control" id="editTitle" name="title"
-                                       th:value="${book.title}" required>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="vendorCode" class="form-label">Vendor Code</label>
+                                    <input type="text" class="form-control" id="editVendorCode" name="vendorCode"
+                                           th:value="${book.vendorCode}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="editTitle" name="title"
+                                           th:value="${book.title}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="year" class="form-label">Year</label>
+                                    <input type="number" class="form-control" id="editYear" name="year"
+                                           th:value="${book.year}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="brand" class="form-label">Brand</label>
+                                    <input type="text" class="form-control" id="editBrand" name="brand"
+                                           th:value="${book.brand}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="stock" class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="stock" name="stock" th:value="${book.stock}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" th:value="${book.price}" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="year" class="form-label">Year</label>
-                                <input type="number" class="form-control" id="editYear" name="year"
-                                       th:value="${book.year}" required>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
                             </div>
-                            <div class="mb-3">
-                                <label for="brand" class="form-label">Brand</label>
-                                <input type="text" class="form-control" id="editBrand" name="brand"
-                                       th:value="${book.brand}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="stock" class="form-label">Stock</label>
-                                <input type="number" class="form-control" id="stock" name="stock" th:value="${book.stock}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="price" class="form-label">Price</label>
-                                <input type="number" step="0.01" class="form-control" id="price" name="price" th:value="${book.price}" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Таблица книг -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Vendor Code</th>
-                <th>Title</th>
-                <th>Year</th>
-                <th>Brand</th>
-                <th>Stock</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="book : ${books}" th:if="${not #lists.isEmpty(books)}">
-                <td th:text="${book.id}"></td>
-                <td th:text="${book.vendorCode}"></td>
-                <td th:text="${book.title}"></td>
-                <td th:text="${book.year}"></td>
-                <td th:text="${book.brand}"></td>
-                <td th:text="${book.stock}"></td>
-                <td th:text="${#numbers.formatDecimal(book.price, 1, 2)}"></td>
-                <td>
-                    <!-- Кнопка редактирования -->
-                    <button type="button" class="btn btn-primary btn-sm me-2" data-bs-toggle="modal"
-                            th:attr="data-bs-target='#editBookModal'+${book.id}">
-                        Edit
-                    </button>
+        <!-- Таблица книг -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Vendor Code</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Brand</th>
+                    <th>Stock</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="book : ${books}" th:if="${not #lists.isEmpty(books)}">
+                    <td th:text="${book.id}"></td>
+                    <td th:text="${book.vendorCode}"></td>
+                    <td th:text="${book.title}"></td>
+                    <td th:text="${book.year}"></td>
+                    <td th:text="${book.brand}"></td>
+                    <td th:text="${book.stock}"></td>
+                    <td th:text="${#numbers.formatDecimal(book.price, 1, 2)}"></td>
+                    <td>
+                        <!-- Кнопка редактирования -->
+                        <button type="button" class="btn btn-primary btn-sm me-2" data-bs-toggle="modal"
+                                th:attr="data-bs-target='#editBookModal'+${book.id}">
+                            Edit
+                        </button>
 
-                    <!-- Кнопка удаления -->
-                    <form th:action="@{/api/books/{id}(id=${book.id})}" method="post" style="display: inline;">
-                        <input type="hidden" name="_method" value="delete"/>
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
-                </td>
-            </tr>
+                        <!-- Кнопка удаления -->
+                        <form th:action="@{/api/books/{id}(id=${book.id})}" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="delete"/>
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
 
-            <tr th:if="${#lists.isEmpty(books)}">
-                <td colspan="8" class="text-center text-muted">
-                    No books found
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div th:if="${totalPages > 1}" class="mt-4">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                <!-- Первая страница -->
-                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link" th:href="@{/api/books(page=0, size=${pageSize},
-                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
-                        &laquo;
-                    </a>
-                </li>
-
-                <!-- Предыдущая страница -->
-                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link" th:href="@{/api/books(page=${currentPage - 1}, size=${pageSize},
-                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
-                        &lsaquo;
-                    </a>
-                </li>
-
-                <!-- Текущая страница -->
-                <li class="page-item active">
-                    <span class="page-link" th:text="${currentPage + 1}"></span>
-                </li>
-
-                <!-- Следующая страница -->
-                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                    <a class="page-link" th:href="@{/api/books(page=${currentPage + 1}, size=${pageSize},
-                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
-                        &rsaquo;
-                    </a>
-                </li>
-
-                <!-- Последняя страница -->
-                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                    <a class="page-link" th:href="@{/api/books(page=${totalPages - 1}, size=${pageSize},
-                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
-                        &raquo;
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="text-center text-muted small">
-            Страница <span th:text="${currentPage + 1}"></span> из
-            <span th:text="${totalPages}"></span>
+                <tr th:if="${#lists.isEmpty(books)}">
+                    <td colspan="8" class="text-center text-muted">
+                        No books found
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
-    <!-- Форма добавления новой книги -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Add New Book</h5>
+        <div th:if="${totalPages > 1}" class="mt-4">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <!-- Первая страница -->
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/books(page=0, size=${pageSize},
+                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
+                            &laquo;
+                        </a>
+                    </li>
+
+                    <!-- Предыдущая страница -->
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/books(page=${currentPage - 1}, size=${pageSize},
+                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
+                            &lsaquo;
+                        </a>
+                    </li>
+
+                    <!-- Текущая страница -->
+                    <li class="page-item active">
+                        <span class="page-link" th:text="${currentPage + 1}"></span>
+                    </li>
+
+                    <!-- Следующая страница -->
+                    <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/books(page=${currentPage + 1}, size=${pageSize},
+                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
+                            &rsaquo;
+                        </a>
+                    </li>
+
+                    <!-- Последняя страница -->
+                    <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/books(page=${totalPages - 1}, size=${pageSize},
+                    title=${titleFilter}, brand=${brandFilter}, year=${yearFilter})}">
+                            &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center text-muted small">
+                Страница <span th:text="${currentPage + 1}"></span> из
+                <span th:text="${totalPages}"></span>
+            </div>
         </div>
-        <div class="card-body">
-            <form id="addBookForm" th:action="@{/api/books}" method="post">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label for="vendorCode" class="form-label">Vendor Code</label>
-                        <input type="text" class="form-control" id="vendorCode" name="vendorCode" required>
+        <!-- Форма добавления новой книги -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Add New Book</h5>
+            </div>
+            <div class="card-body">
+                <form id="addBookForm" th:action="@{/api/books}" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="vendorCode" class="form-label">Vendor Code</label>
+                            <input type="text" class="form-control" id="vendorCode" name="vendorCode" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="newTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="newTitle" name="title" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="newYear" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="newYear" name="year" min="1000" max="2050" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="newBrand" class="form-label">Brand</label>
+                            <input type="text" class="form-control" id="newBrand" name="brand" required>
+                        </div>
+                        <div class="col-md-1">
+                            <label for="newStock" class="form-label">Stock</label>
+                            <input type="number" class="form-control" id="newStock" name="stock" min="0" required>
+                        </div>
+                        <div class="col-md-1">
+                            <label for="newPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="newPrice" name="price" min="0.01" required>
+                        </div>
+                        <div class="col-md-12 mt-3">
+                            <button type="submit" class="btn btn-success">Add Book</button>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <label for="newTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="newTitle" name="title" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="newYear" class="form-label">Year</label>
-                        <input type="number" class="form-control" id="newYear" name="year" min="1000" max="2050" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="newBrand" class="form-label">Brand</label>
-                        <input type="text" class="form-control" id="newBrand" name="brand" required>
-                    </div>
-                    <div class="col-md-1">
-                        <label for="newStock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="newStock" name="stock" min="0" required>
-                    </div>
-                    <div class="col-md-1">
-                        <label for="newPrice" class="form-label">Price</label>
-                        <input type="number" step="0.01" class="form-control" id="newPrice" name="price" min="0.01" required>
-                    </div>
-                    <div class="col-md-12 mt-3">
-                        <button type="submit" class="btn btn-success">Add Book</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
-    <!-- Сообщения об успехе/ошибке -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
-        <span th:text="${successMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <!-- Сообщения об успехе/ошибке -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
-    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
-        <span th:text="${errorMessage}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+
+        <!-- Bootstrap JS (только для закрытия алерта) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </div>
-
-
-<!-- Bootstrap JS (только для закрытия алерта) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</div>
 </div>
 </body>
 </html>
