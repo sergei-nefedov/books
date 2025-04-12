@@ -77,10 +77,10 @@ public class BookController {
     @PutMapping("/{id}")
     public String updateBook(
             @PathVariable Long id,
-            @ModelAttribute Book book,
+            @Validated BookDto bookDto,
             RedirectAttributes redirectAttributes) {
         try {
-            bookService.update(id, book);
+            bookService.update(id, bookDto);
             redirectAttributes.addFlashAttribute("successMessage", "Book updated successfully");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating book: " + e.getMessage());
